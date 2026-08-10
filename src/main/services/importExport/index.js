@@ -91,8 +91,7 @@ const importExportService = {
     supplierMode = 'auto',
   } = {}) {
     if (entityId !== 'products') {
-      // Fall back to legacy entity preview
-      return this.previewImport({ entityId, filePath, format });
+      throw new Error('Mapped import preview is only supported for products.');
     }
     const { rows } = await readHeadersAndRows(filePath, format);
     const mappedRows = applyColumnMapping(rows, mapping);

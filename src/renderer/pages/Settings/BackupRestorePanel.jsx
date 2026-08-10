@@ -474,7 +474,6 @@ export default function BackupRestorePanel({ onMessage, onError }) {
               <p><span className="text-muted-foreground">Database Version:</span> {restorePreview.manifest.databaseVersion || '—'}</p>
               <p><span className="text-muted-foreground">Sales:</span> {restorePreview.manifest.salesCount ?? '—'}</p>
               <p><span className="text-muted-foreground">Products:</span> {restorePreview.manifest.productCount ?? '—'}</p>
-              <p><span className="text-muted-foreground">Customers:</span> {restorePreview.manifest.customerCount ?? '—'}</p>
               <p><span className="text-muted-foreground">Users:</span> {restorePreview.manifest.userCount ?? '—'}</p>
               <p><span className="text-muted-foreground">Size:</span> {formatBytes(restorePreview.manifest.backupSize)}</p>
               {restorePreview.needsMigration && (

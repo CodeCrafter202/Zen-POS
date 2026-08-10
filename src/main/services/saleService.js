@@ -164,7 +164,6 @@ function mapSaleRow(row, items = []) {
     irdStatus: row.ird_status,
     irdUuid: row.ird_uuid,
     notes: row.notes,
-    isSynced: Boolean(row.is_synced),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     items: mappedItems,
@@ -470,9 +469,9 @@ const saleService = {
           id, invoice_number, invoice_seq, sale_date, cashier_id, customer_id,
           subtotal, discount_total, vat_total, total,
           payment_method, amount_tendered, change_given, status,
-          ird_status, notes, is_synced, created_at, updated_at,
+          ird_status, notes, created_at, updated_at,
           sale_discount_type, sale_discount_value, session_id
-        ) VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'completed', 'none', ?, 0, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'completed', 'none', ?, ?, ?, ?, ?, ?)
       `).run(
         saleId,
         invoiceNumber,
@@ -646,8 +645,7 @@ const saleService = {
           void_reason = ?,
           voided_by = ?,
           voided_at = ?,
-          updated_at = ?,
-          is_synced = 0
+          updated_at = ?
         WHERE id = ?
       `).run(voidReason, cleanUserId, timestamp, timestamp, id);
 

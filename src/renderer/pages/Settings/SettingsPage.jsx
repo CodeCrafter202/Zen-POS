@@ -207,18 +207,6 @@ export default function SettingsPage() {
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Language</label>
-                  <select
-                    className={inputClassName}
-                    value={form.language}
-                    onChange={(e) => setForm({ ...form, language: e.target.value })}
-                  >
-                    <option value="en">English</option>
-                    <option value="si">Sinhala</option>
-                    <option value="ta">Tamil</option>
-                  </select>
-                </div>
-                <div>
                   <label className="block text-sm font-medium mb-2">Receipt header</label>
                   <input
                     className={inputClassName}
@@ -227,8 +215,6 @@ export default function SettingsPage() {
                     placeholder="Optional header line"
                   />
                 </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium mb-2">Receipt footer</label>
                   <input
@@ -238,6 +224,8 @@ export default function SettingsPage() {
                     placeholder="Thank you for shopping"
                   />
                 </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium mb-2">Return within (days)</label>
                   <input

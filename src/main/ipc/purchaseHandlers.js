@@ -45,18 +45,6 @@ export function registerPurchaseHandlers() {
     }
   });
 
-  ipcMain.handle('purchase:get', async (event, payload = {}) => {
-    try {
-      const session = validateSession(extractToken(payload));
-      if (!session.success) return session;
-      const permCheck = requirePermission(session, 'purchases');
-      if (!permCheck.success) return permCheck;
-      return { success: true, data: purchaseService.getReceipt(payload.receiptId) };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
-
   ipcMain.handle('purchase:create', async (event, payload = {}) => {
     try {
       const session = validateSession(extractToken(payload));

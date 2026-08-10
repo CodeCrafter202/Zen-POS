@@ -127,11 +127,16 @@ const expenseService = {
   },
 
   softDelete({ expenseId, userId }) {
+    cashSessionService.assertSessionAllowsPosting();
     const db = getDb();
     const row = db.prepare(`
       SELECT * FROM expenses WHERE id = ? AND deleted_at IS NULL
     `).get(cleanText(expenseId));
     if (!row) throw new Error('Expense not found.');
+    const open = cashSessionService.getOpenSession();
+    if (open && row.session_id && row.session_id !== open.id) {
+      throw new Error('You can only delete expenses from the current open cash day.');
+    }
     db.prepare(`
       UPDATE expenses SET deleted_at = ?, updated_at = ? WHERE id = ?
     `).run(nowIso(), nowIso(), row.id);

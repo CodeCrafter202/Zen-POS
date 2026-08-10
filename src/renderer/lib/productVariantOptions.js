@@ -175,20 +175,6 @@ export function countAttributeSets(config) {
   return buildAttributeSets(config).length;
 }
 
-/** @deprecated use buildAttributeSets */
-export function buildPairsFromGroups(mode, groups = []) {
-  return buildAttributeSets({
-    axisType: VARIANT_AXIS_TYPES.sizeAndColor,
-    buildMode: mode,
-    groups,
-  });
-}
-
-/** @deprecated use countAttributeSets */
-export function countPairsFromGroups(mode, groups = []) {
-  return buildPairsFromGroups(mode, groups).length;
-}
-
 export function detectAxisTypeFromVariants(variants = []) {
   let hasSize = false;
   let hasColor = false;

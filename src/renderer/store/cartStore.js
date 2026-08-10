@@ -1,44 +1,17 @@
 import { create } from 'zustand';
+import {
+  DISCOUNT_TYPES,
+  roundMoney,
+  toNumber,
+  normalizeDiscountType,
+  computeDiscountAmount,
+  inclusiveVat,
+} from '../lib/discountUtils.js';
 
-const DISCOUNT_NONE = 'none';
-const DISCOUNT_FIXED = 'fixed';
-const DISCOUNT_PERCENT = 'percent';
+const DISCOUNT_NONE = DISCOUNT_TYPES.NONE;
 
 function lineKey(variantId) {
   return String(variantId);
-}
-
-function roundMoney(value) {
-  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
-}
-
-function toNumber(value, fallback = 0) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function normalizeDiscountType(type) {
-  const value = String(type || DISCOUNT_NONE).toLowerCase();
-  if (value === DISCOUNT_FIXED || value === DISCOUNT_PERCENT) return value;
-  return DISCOUNT_NONE;
-}
-
-function computeDiscountAmount(baseAmount, type, value) {
-  const base = Math.max(0, toNumber(baseAmount, 0));
-  const discountType = normalizeDiscountType(type);
-  const discountValue = Math.max(0, toNumber(value, 0));
-  if (discountType === DISCOUNT_NONE || discountValue <= 0 || base <= 0) return 0;
-  if (discountType === DISCOUNT_PERCENT) {
-    return roundMoney(Math.min(base, (base * Math.min(discountValue, 100)) / 100));
-  }
-  return roundMoney(Math.min(base, discountValue));
-}
-
-function inclusiveVat(amount, taxRate) {
-  const rate = Number(taxRate || 0);
-  const total = Number(amount || 0);
-  if (rate <= 0 || total <= 0) return 0;
-  return roundMoney((total * rate) / (100 + rate));
 }
 
 export const useCartStore = create((set, get) => ({
@@ -127,11 +100,6 @@ export const useCartStore = create((set, get) => ({
           : item
       ),
     });
-  },
-
-  /** @deprecated Prefer applyItemDiscount — kept for compatibility */
-  applyDiscount(variantId, discountAmount) {
-    get().applyItemDiscount(variantId, DISCOUNT_FIXED, discountAmount);
   },
 
   /**
