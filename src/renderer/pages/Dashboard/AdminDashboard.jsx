@@ -64,7 +64,7 @@ const MODULES = [
   },
   {
     title: 'Settings',
-    description: 'Shop info, tax, printer, backups, and data import/export.',
+    description: 'Shop details, printing, sales settings, backups, and import/export.',
     icon: Settings,
     path: '/settings',
     color: 'hover:border-slate-500/35 hover:shadow-slate-500/5',
