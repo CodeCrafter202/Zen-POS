@@ -73,16 +73,6 @@ export function registerImportExportHandlers() {
     }
   });
 
-  ipcMain.handle('import:fields', async (event, payload = {}) => {
-    try {
-      const gate = adminGate(payload);
-      if (!gate.ok) return gate.response;
-      return { success: true, data: importExportService.listProductFields() };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
-
   ipcMain.handle('import:previewMapped', async (event, payload = {}) => {
     try {
       const gate = adminGate(payload);
@@ -94,21 +84,6 @@ export function registerImportExportHandlers() {
         mapping: payload.mapping,
         categoryMode: payload.categoryMode || 'auto',
         supplierMode: payload.supplierMode || 'auto',
-      });
-      return { success: true, data };
-    } catch (err) {
-      return { success: false, error: err.message, code: err.code };
-    }
-  });
-
-  ipcMain.handle('import:preview', async (event, payload = {}) => {
-    try {
-      const gate = adminGate(payload);
-      if (!gate.ok) return gate.response;
-      const data = await importExportService.previewImport({
-        entityId: payload.entityId,
-        filePath: payload.filePath,
-        format: payload.format,
       });
       return { success: true, data };
     } catch (err) {
@@ -152,17 +127,6 @@ export function registerImportExportHandlers() {
       return { success: true, data };
     } catch (err) {
       return { success: false, error: err.message, code: err.code };
-    }
-  });
-
-  ipcMain.handle('import:cancel', async (event, payload = {}) => {
-    try {
-      const gate = adminGate(payload);
-      if (!gate.ok) return gate.response;
-      const cancelled = importExportService.cancelJob(payload.jobId);
-      return { success: true, data: { cancelled } };
-    } catch (err) {
-      return { success: false, error: err.message };
     }
   });
 

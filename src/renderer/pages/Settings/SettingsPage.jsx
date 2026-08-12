@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { Store, Printer, Percent, HardDrive, FileUp } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
 import { Button } from '../../components/ui/button';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { invokeWithAuth } from '../../lib/ipc';
 import { cn } from '../../lib/utils';
 import BackupRestorePanel from './BackupRestorePanel';
 import ImportExportPanel from './ImportExportPanel';
-
-const inputClassName =
-  'w-full p-3 rounded-lg bg-input border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring';
+import ShopSettingsPanel from './ShopSettingsPanel';
+import PrinterSettingsPanel from './PrinterSettingsPanel';
+import PoliciesSettingsPanel from './PoliciesSettingsPanel';
 
 const emptyForm = {
   shopName: '',
@@ -32,7 +32,18 @@ const emptyForm = {
   staleDayPolicy: 'block',
 };
 
+const SETTINGS_SECTIONS = [
+  { id: 'shop', label: 'Shop Details', icon: Store },
+  { id: 'printer', label: 'Printing', icon: Printer },
+  { id: 'policies', label: 'Sales Settings', icon: Percent },
+  { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
+  { id: 'data', label: 'Import & Export', icon: FileUp },
+];
+
+const FORM_SECTIONS = new Set(['shop', 'printer', 'policies']);
+
 export default function SettingsPage() {
+  const [activeSection, setActiveSection] = useState('shop');
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
   const [settingsSaved, setSettingsSaved] = useState(false);
@@ -115,330 +126,105 @@ export default function SettingsPage() {
     setError(response.data?.error || 'Return test print failed.');
   };
 
+  const showSaveBar = FORM_SECTIONS.has(activeSection);
+
+  const panelMessageHandlers = {
+    onMessage: (msg) => {
+      setError('');
+      setMessage(msg);
+    },
+    onError: (msg) => {
+      setMessage('');
+      setError(msg);
+    },
+  };
+
   return (
-    <AppShell title="Settings" description="Shop info, tax, backups, and data import/export.">
-      <div className="space-y-6 max-w-4xl">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        {message && (
-          <Alert>
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Shop info</CardTitle>
-            <CardDescription>Shown on receipts and invoices.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Shop name</label>
-                  <input
-                    className={inputClassName}
-                    value={form.shopName}
-                    onChange={(e) => setForm({ ...form, shopName: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Phone</label>
-                  <input
-                    className={inputClassName}
-                    value={form.shopPhone}
-                    onChange={(e) => setForm({ ...form, shopPhone: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Address</label>
-                <input
-                  className={inputClassName}
-                  value={form.shopAddress}
-                  onChange={(e) => setForm({ ...form, shopAddress: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium mb-2">TIN / VAT number</label>
-                  <input
-                    className={inputClassName}
-                    value={form.shopTin}
-                    onChange={(e) => setForm({ ...form, shopTin: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Default VAT rate (%)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className={inputClassName}
-                    value={form.vatRate}
-                    onChange={(e) => setForm({ ...form, vatRate: e.target.value })}
-                  />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Applied to new products when VAT is marked Applicable on Add Product.
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Invoice prefix</label>
-                  <input
-                    className={inputClassName}
-                    value={form.invoicePrefix}
-                    onChange={(e) => setForm({ ...form, invoicePrefix: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Currency</label>
-                  <input
-                    className={inputClassName}
-                    value={form.currency}
-                    onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Language</label>
-                  <select
-                    className={inputClassName}
-                    value={form.language}
-                    onChange={(e) => setForm({ ...form, language: e.target.value })}
-                  >
-                    <option value="en">English</option>
-                    <option value="si">Sinhala</option>
-                    <option value="ta">Tamil</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Receipt header</label>
-                  <input
-                    className={inputClassName}
-                    value={form.receiptHeader}
-                    onChange={(e) => setForm({ ...form, receiptHeader: e.target.value })}
-                    placeholder="Optional header line"
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Receipt footer</label>
-                  <input
-                    className={inputClassName}
-                    value={form.receiptFooter}
-                    onChange={(e) => setForm({ ...form, receiptFooter: e.target.value })}
-                    placeholder="Thank you for shopping"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Return within (days)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    className={inputClassName}
-                    value={form.returnWithinDays}
-                    onChange={(e) => setForm({ ...form, returnWithinDays: e.target.value })}
-                  />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Returns accepted within {form.returnWithinDays || 7} days.
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Receipt printer</label>
-                  <select
-                    className={inputClassName}
-                    value={form.printerPort || ''}
-                    onChange={(e) => setForm({ ...form, printerPort: e.target.value })}
-                  >
-                    <option value="">— Manual print dialog —</option>
-                    {printers.map((printer) => (
-                      <option key={printer.name} value={printer.name}>
-                        {printer.name}{printer.isDefault ? ' (default)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Choose <strong>Xprinter XP-80</strong> (paper width 80). Uses ESC/POS raw print.
-                    Cash drawer opens automatically on cash sales when wired to the printer (RJ11).
-                  </p>
-                  <input
-                    className={cn(inputClassName, 'mt-2')}
-                    value={form.printerPort || ''}
-                    onChange={(e) => setForm({ ...form, printerPort: e.target.value })}
-                    placeholder="Or type name / COM3"
-                  />
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={testingPrint || !form.printerPort}
-                      onClick={handleTestPrint}
-                    >
-                      {testingPrint ? 'Printing test…' : 'Print test page'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={testingPrint || !form.printerPort}
-                      onClick={handleTestReturnPrint}
-                    >
-                      Test return receipt
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Paper width (mm)</label>
-                  <select
-                    className={inputClassName}
-                    value={form.paperWidth}
-                    onChange={(e) => setForm({ ...form, paperWidth: Number(e.target.value) })}
-                  >
-                    <option value={80}>80 (XP-80)</option>
-                    <option value={58}>58</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 border-t border-border pt-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Label width (mm)</label>
-                  <input
-                    type="number"
-                    min={20}
-                    max={120}
-                    step={0.1}
-                    className={inputClassName}
-                    value={form.labelWidthMm ?? 38}
-                    onChange={(e) => setForm({ ...form, labelWidthMm: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Label height (mm)</label>
-                  <input
-                    type="number"
-                    min={15}
-                    max={100}
-                    step={0.1}
-                    className={inputClassName}
-                    value={form.labelHeightMm ?? 25}
-                    onChange={(e) => setForm({ ...form, labelHeightMm: Number(e.target.value) })}
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <p className="text-xs text-muted-foreground">
-                    Default <strong>38 × 25 mm</strong> (1.5&quot; × 1&quot;) for XP-365B price labels.
-                    Match Windows printer Preferences to the same size. When printing labels, select{' '}
-                    <strong>Xprinter XP-365B</strong>, use scale <strong>100%</strong> (do not Fit to page).
-                  </p>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-4 space-y-4">
-                <div>
-                  <p className="text-sm font-semibold">Cash day past midnight</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    If yesterday&apos;s cash day was left open, choose whether billing is blocked until close &amp; reopen.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    If cash day left open past midnight
-                  </label>
-                  <select
-                    className={inputClassName}
-                    value={form.staleDayPolicy || 'block'}
-                    onChange={(e) => setForm({ ...form, staleDayPolicy: e.target.value })}
-                  >
-                    <option value="block">Block selling (recommended)</option>
-                    <option value="warn">Warn only</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-4 space-y-4">
-                <div>
-                  <p className="text-sm font-semibold">Discount limits</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Maximum discount staff can apply on an item or whole bill (percent of price). Admins have no limit.
-                  </p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Cashier max discount (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      className={inputClassName}
-                      value={form.cashierMaxDiscountPct}
-                      onChange={(e) => setForm({ ...form, cashierMaxDiscountPct: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Manager max discount (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      className={inputClassName}
-                      value={form.managerMaxDiscountPct}
-                      onChange={(e) => setForm({ ...form, managerMaxDiscountPct: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative inline-flex items-center gap-3">
-                <Button type="submit" disabled={saving}>
-                  {saving ? 'Saving...' : 'Save settings'}
-                </Button>
-                {settingsSaved && (
-                  <span
-                    role="status"
-                    className="absolute left-0 top-full mt-2 whitespace-nowrap rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-600 shadow-sm"
-                  >
-                    Settings saved.
-                  </span>
+    <AppShell
+      title="Settings"
+      description="Shop details, printing, sales settings, backups, and import/export."
+    >
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <nav
+          className="flex gap-2 overflow-x-auto pb-1 lg:w-52 lg:shrink-0 lg:flex-col lg:overflow-visible lg:pb-0"
+          aria-label="Settings sections"
+        >
+          {SETTINGS_SECTIONS.map(({ id, label, icon: Icon }) => {
+            const isActive = activeSection === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  setActiveSection(id);
+                  setSettingsSaved(false);
+                }}
+                className={cn(
+                  'flex shrink-0 items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all cursor-pointer border',
+                  isActive
+                    ? 'bg-primary/10 text-primary border-primary/20 shadow-sm shadow-primary/5'
+                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground border-transparent bg-card/50 lg:bg-transparent'
                 )}
+              >
+                <Icon className={cn('h-4 w-4 shrink-0', isActive && 'scale-110')} />
+                <span className="whitespace-nowrap">{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="min-w-0 flex-1 max-w-3xl space-y-6">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          {message && (
+            <Alert>
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
+
+          {showSaveBar ? (
+            <form onSubmit={handleSave} className="space-y-6">
+              {activeSection === 'shop' && (
+                <ShopSettingsPanel form={form} setForm={setForm} />
+              )}
+              {activeSection === 'printer' && (
+                <PrinterSettingsPanel
+                  form={form}
+                  setForm={setForm}
+                  printers={printers}
+                  testingPrint={testingPrint}
+                  onTestPrint={handleTestPrint}
+                  onTestReturnPrint={handleTestReturnPrint}
+                />
+              )}
+              {activeSection === 'policies' && (
+                <PoliciesSettingsPanel form={form} setForm={setForm} />
+              )}
+
+              <div className="sticky bottom-0 z-10 -mx-1 border-t border-border bg-background/95 px-1 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+                <div className="relative inline-flex items-center gap-3">
+                  <Button type="submit" disabled={saving}>
+                    {saving ? 'Saving...' : 'Save settings'}
+                  </Button>
+                  {settingsSaved && (
+                    <span
+                      role="status"
+                      className="whitespace-nowrap rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-600 shadow-sm"
+                    >
+                      Settings saved.
+                    </span>
+                  )}
+                </div>
               </div>
             </form>
-          </CardContent>
-        </Card>
+          ) : null}
 
-        <BackupRestorePanel
-          onMessage={(msg) => {
-            setError('');
-            setMessage(msg);
-          }}
-          onError={(msg) => {
-            setMessage('');
-            setError(msg);
-          }}
-        />
-
-        <ImportExportPanel
-          onMessage={(msg) => {
-            setError('');
-            setMessage(msg);
-          }}
-          onError={(msg) => {
-            setMessage('');
-            setError(msg);
-          }}
-        />
+          {activeSection === 'backup' && <BackupRestorePanel {...panelMessageHandlers} />}
+          {activeSection === 'data' && <ImportExportPanel {...panelMessageHandlers} />}
+        </div>
       </div>
     </AppShell>
   );

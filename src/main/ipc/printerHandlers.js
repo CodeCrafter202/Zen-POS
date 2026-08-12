@@ -80,17 +80,4 @@ export function registerPrinterHandlers() {
     }
   });
 
-  ipcMain.handle('printer:openDrawer', async (event, payload = {}) => {
-    try {
-      const token = extractToken(payload);
-      const session = validateSession(token);
-      if (!session.success) return session;
-      const roleCheck = requireRole(session, ['admin', 'manager', 'cashier']);
-      if (!roleCheck.success) return roleCheck;
-      const result = await printerService.openDrawer();
-      return { success: result.success, data: result, error: result.error };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
 }

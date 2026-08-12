@@ -1,3 +1,13 @@
+/**
+ * Local invoice QR adapter (V1).
+ *
+ * Generates and stores a local invoice payload + QR for receipts/billing UI.
+ * This is NOT a live Sri Lanka IRD/CBMS fiscal submission.
+ *
+ * Extension point: replace this module's implementation (or swap the import in
+ * saleHandlers) when a real IRD/tax API integration is added. Keep the public
+ * shape of saveForSale / getBySaleId so sales + UI do not need a rewrite.
+ */
 import crypto from 'crypto';
 import QRCode from 'qrcode';
 import { getDb } from '../database/db.js';
@@ -8,7 +18,8 @@ function now() {
   return new Date().toISOString();
 }
 
-const irdService = {
+const invoiceQrAdapter = {
+  /** Build the local invoice JSON payload shown/encoded in the QR. */
   buildJson(sale, settings = null) {
     const shop = settings || settingsService.get();
     return {
@@ -43,6 +54,10 @@ const irdService = {
     return QRCode.toDataURL(payload, { margin: 1, width: 200 });
   },
 
+  /**
+   * Persist local invoice QR for a sale and update sales.ird_* status fields.
+   * Table name `ird_invoices` is historical; treat as local invoice QR storage.
+   */
   async saveForSale(saleId) {
     const db = getDb();
     const sale = saleService.getById(saleId);
@@ -96,4 +111,8 @@ const irdService = {
   },
 };
 
+/** @deprecated Prefer invoiceQrAdapter — kept as alias for existing imports. */
+const irdService = invoiceQrAdapter;
+
+export { invoiceQrAdapter };
 export default irdService;

@@ -98,21 +98,6 @@ export function registerProductHandlers() {
     }
   });
 
-  ipcMain.handle('product:getById', async (event, payload = {}) => {
-    try {
-      const token = extractToken(payload);
-      const session = validateSession(token);
-      if (!session.success) return session;
-
-      return {
-        success: true,
-        data: productService.getProductById(payload.productId),
-      };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
-
   ipcMain.handle('product:create', async (event, payload = {}) => {
     try {
       const token = extractToken(payload);
@@ -226,21 +211,6 @@ export function registerProductHandlers() {
       );
 
       return { success: true, data: summary };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
-
-  ipcMain.handle('inventory:getSummary', async (event, payload = {}) => {
-    try {
-      const token = extractToken(payload);
-      const session = validateSession(token);
-      if (!session.success) return session;
-
-      return {
-        success: true,
-        data: productService.getInventorySummary(payload.variantId),
-      };
     } catch (err) {
       return { success: false, error: err.message };
     }

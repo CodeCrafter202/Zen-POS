@@ -64,29 +64,4 @@ export function registerCashSessionHandlers() {
     }
   });
 
-  ipcMain.handle('cashSession:list', async (event, payload = {}) => {
-    try {
-      const session = validateSession(extractToken(payload));
-      if (!session.success) return session;
-      const permCheck = requirePermission(session, 'dayClose');
-      if (!permCheck.success) return permCheck;
-      return { success: true, data: cashSessionService.listRecent({ limit: payload.limit }) };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
-
-  ipcMain.handle('cashSession:getZ', async (event, payload = {}) => {
-    try {
-      const session = validateSession(extractToken(payload));
-      if (!session.success) return session;
-      const permCheck = requirePermission(session, 'dayClose');
-      if (!permCheck.success) return permCheck;
-      const z = cashSessionService.getZReport(payload.sessionId);
-      if (!z) return { success: false, error: 'Z-report not found.' };
-      return { success: true, data: z };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
 }

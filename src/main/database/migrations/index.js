@@ -16,7 +16,7 @@ import * as migration015 from './015_import_export.js';
 import * as migration016 from './016_stale_day_policy.js';
 import * as migration017 from './017_user_permissions.js';
 import * as migration018 from './018_label_size.js';
-import * as migration019 from './019_receipt_printer_profile.js';
+import * as migration019 from './019_drop_sales_is_synced.js';
 
 const migrations = [
   migration001,

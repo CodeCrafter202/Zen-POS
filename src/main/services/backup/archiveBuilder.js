@@ -33,16 +33,6 @@ function countSafe(db, sql) {
   }
 }
 
-function tableExists(db, name) {
-  try {
-    return Boolean(
-      db.prepare(`SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = ?`).get(name)
-    );
-  } catch {
-    return false;
-  }
-}
-
 export function collectManifestStats(db = getDb()) {
   const settings = db.prepare('SELECT * FROM settings WHERE id = 1').get() || {};
   return {
@@ -51,9 +41,8 @@ export function collectManifestStats(db = getDb()) {
     currency: settings.currency || 'LKR',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     productCount: countSafe(db, 'SELECT COUNT(*) AS c FROM products WHERE deleted_at IS NULL'),
-    customerCount: tableExists(db, 'customers')
-      ? countSafe(db, 'SELECT COUNT(*) AS c FROM customers WHERE deleted_at IS NULL')
-      : 0,
+    // Reserved for a future customers module; always 0 in V1 (no customers table).
+    customerCount: 0,
     salesCount: countSafe(db, 'SELECT COUNT(*) AS c FROM sales WHERE deleted_at IS NULL'),
     userCount: countSafe(db, 'SELECT COUNT(*) AS c FROM users WHERE deleted_at IS NULL'),
   };

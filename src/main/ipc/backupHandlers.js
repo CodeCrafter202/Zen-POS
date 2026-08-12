@@ -1,6 +1,5 @@
 import { BrowserWindow, dialog, ipcMain, app } from 'electron';
 import backupService from '../services/backup/index.js';
-import backupScheduleService from '../services/backup/backupScheduleService.js';
 import { progressBus } from '../services/backup/backupUtils.js';
 import { extractToken, requireRole, validateSession } from '../lib/sessionAuth.js';
 import { writeAuditLog } from '../lib/auditLog.js';
@@ -69,26 +68,6 @@ export function registerBackupHandlers() {
       const gate = adminGate(payload);
       if (!gate.ok) return gate.response;
       return { success: true, data: backupService.listLocalBackups() };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
-
-  ipcMain.handle('backup:listDrives', async (event, payload = {}) => {
-    try {
-      const gate = adminGate(payload);
-      if (!gate.ok) return gate.response;
-      return { success: true, data: backupService.listRemovableDrives() };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
-
-  ipcMain.handle('backup:history', async (event, payload = {}) => {
-    try {
-      const gate = adminGate(payload);
-      if (!gate.ok) return gate.response;
-      return { success: true, data: backupService.listHistory() };
     } catch (err) {
       return { success: false, error: err.message };
     }
@@ -192,19 +171,6 @@ export function registerBackupHandlers() {
     }
   });
 
-  ipcMain.handle('backup:runScheduled', async (event, payload = {}) => {
-    try {
-      const gate = adminGate(payload);
-      if (!gate.ok) return gate.response;
-      const data = await backupScheduleService.runScheduledNow({
-        themePreference: payload.themePreference || null,
-      });
-      writeAuditLog('backup_automatic', gate.session.user.id);
-      return { success: true, data };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
 }
 
 export function registerDialogHandlers() {

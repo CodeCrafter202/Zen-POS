@@ -42,6 +42,7 @@ function mapSettings(row) {
       shopPhone: '',
       shopTin: '',
       currency: 'LKR',
+      // Reserved for V1.1 i18n (si/ta). UI selector removed until translations ship.
       language: 'en',
       vatRate: 18,
       nextInvoiceSeq: 0,

@@ -22,6 +22,7 @@ export default function ExpensesPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const refresh = async () => {
     const [cRes, lRes] = await Promise.all([
@@ -57,6 +58,23 @@ export default function ExpensesPage() {
     setMessage(`Expense saved: ${formatMoney(response.data.amount)}.`);
     setAmount('');
     setNote('');
+    refresh();
+  };
+
+  const handleDelete = async (expense) => {
+    const label = `${expense.category} · ${formatMoney(expense.amount)}`;
+    if (!window.confirm(`Delete this expense?\n${label}`)) return;
+
+    setDeletingId(expense.id);
+    setError('');
+    setMessage('');
+    const response = await invokeWithAuth('expense:delete', { expenseId: expense.id });
+    setDeletingId(null);
+    if (!response.success) {
+      setError(response.error || 'Could not delete expense.');
+      return;
+    }
+    setMessage('Expense deleted.');
     refresh();
   };
 
@@ -138,14 +156,25 @@ export default function ExpensesPage() {
           <CardContent className="space-y-2">
             {!list.length && <p className="text-sm text-muted-foreground">No expenses yet.</p>}
             {list.map((row) => (
-              <div key={row.id} className="flex justify-between text-sm border-b border-border py-2">
-                <span>
+              <div key={row.id} className="flex items-center justify-between gap-3 text-sm border-b border-border py-2">
+                <span className="min-w-0">
                   {row.category}
                   {row.note ? ` · ${row.note}` : ''}
                 </span>
-                <span className="font-semibold">
-                  {formatMoney(row.amount)} · {row.paymentMethod}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-semibold">
+                    {formatMoney(row.amount)} · {row.paymentMethod}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={deletingId === row.id}
+                    onClick={() => handleDelete(row)}
+                  >
+                    {deletingId === row.id ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </div>
               </div>
             ))}
           </CardContent>

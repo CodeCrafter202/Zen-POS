@@ -51,7 +51,7 @@ export function getEntity(id) {
   return entity;
 }
 
-// --- Built-in entities for current POSLY modules ---
+// --- Built-in entities for current ZEN modules ---
 
 registerEntity({
   id: 'categories',
@@ -805,19 +805,6 @@ registerEntity({
         ORDER BY COALESCE(b.on_hand, 0) ASC
       `)
       .all();
-  },
-  import: null,
-});
-
-// Customers module is not in schema yet — stub for UI discoverability
-registerEntity({
-  id: 'customers',
-  label: 'Customers',
-  formats: ['csv', 'xlsx', 'json'],
-  isAvailable: () => tableExists('customers'),
-  export() {
-    requireTable('customers');
-    return getDb().prepare(`SELECT * FROM customers WHERE deleted_at IS NULL LIMIT 100000`).all();
   },
   import: null,
 });
