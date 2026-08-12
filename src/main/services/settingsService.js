@@ -24,6 +24,16 @@ function clampLabelMm(value, fallback, min, max) {
   return Math.min(max, Math.max(min, Math.round(n * 10) / 10));
 }
 
+function normalizeReceiptPrinterProfile(value) {
+  return String(value ?? '').trim().toLowerCase() === 'xp365b' ? 'xp365b' : 'xp80';
+}
+
+function clampReceiptFeedLines(value, fallback = 5) {
+  const n = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(10, Math.max(1, n));
+}
+
 function mapSettings(row) {
   if (!row) {
     return {
@@ -43,6 +53,8 @@ function mapSettings(row) {
       paperWidth: 80,
       labelWidthMm: 38,
       labelHeightMm: 25,
+      receiptPrinterProfile: 'xp80',
+      receiptFeedLines: 5,
       cashierMaxDiscountPct: 10,
       managerMaxDiscountPct: 25,
       staleDayPolicy: 'block',
@@ -66,6 +78,8 @@ function mapSettings(row) {
     paperWidth: toNumber(row.paper_width, 80),
     labelWidthMm: clampLabelMm(row.label_width_mm, 38, 20, 120),
     labelHeightMm: clampLabelMm(row.label_height_mm, 25, 15, 100),
+    receiptPrinterProfile: normalizeReceiptPrinterProfile(row.receipt_printer_profile),
+    receiptFeedLines: clampReceiptFeedLines(row.receipt_feed_lines, 5),
     cashierMaxDiscountPct: toNumber(row.cashier_max_discount_pct, 10),
     managerMaxDiscountPct: toNumber(row.manager_max_discount_pct, 25),
     staleDayPolicy: normalizeStaleDayPolicy(row.stale_day_policy),
@@ -118,6 +132,14 @@ const settingsService = {
         payload.labelHeightMm !== undefined
           ? clampLabelMm(payload.labelHeightMm, current.labelHeightMm, 15, 100)
           : current.labelHeightMm,
+      receiptPrinterProfile:
+        payload.receiptPrinterProfile !== undefined
+          ? normalizeReceiptPrinterProfile(payload.receiptPrinterProfile)
+          : current.receiptPrinterProfile,
+      receiptFeedLines:
+        payload.receiptFeedLines !== undefined
+          ? clampReceiptFeedLines(payload.receiptFeedLines, current.receiptFeedLines)
+          : current.receiptFeedLines,
       cashierMaxDiscountPct:
         payload.cashierMaxDiscountPct !== undefined
           ? Math.min(100, Math.max(0, toNumber(payload.cashierMaxDiscountPct, current.cashierMaxDiscountPct)))
@@ -153,6 +175,8 @@ const settingsService = {
         paper_width = ?,
         label_width_mm = ?,
         label_height_mm = ?,
+        receipt_printer_profile = ?,
+        receipt_feed_lines = ?,
         cashier_max_discount_pct = ?,
         manager_max_discount_pct = ?,
         stale_day_policy = ?,
@@ -174,6 +198,8 @@ const settingsService = {
       next.paperWidth,
       next.labelWidthMm,
       next.labelHeightMm,
+      next.receiptPrinterProfile,
+      next.receiptFeedLines,
       next.cashierMaxDiscountPct,
       next.managerMaxDiscountPct,
       next.staleDayPolicy,

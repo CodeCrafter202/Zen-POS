@@ -48,7 +48,41 @@ function pushWrapped(chunks, text, width) {
   }
 }
 
-function buildEscPosReceipt({ shop, sale, paperWidth = 80 }) {
+const RECEIPT_TAIL_PROFILES = {
+  xp365b: { cutMode: 66, feedUnits: 0xc0 },
+  xp80: { cutMode: 65, feedUnits: 0xa0 },
+};
+
+function normalizeReceiptProfile(profile) {
+  return String(profile ?? '').trim().toLowerCase() === 'xp365b' ? 'xp365b' : 'xp80';
+}
+
+function clampFeedLines(value, fallback = 5) {
+  const n = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(10, Math.max(1, n));
+}
+
+/** Profile-specific feed lines + cut (shared by sale, return, and test receipts). */
+function appendReceiptTail(chunks, { profile = 'xp80', feedLines = 5 } = {}) {
+  const ESC = 0x1b;
+  const GS = 0x1d;
+  const key = normalizeReceiptProfile(profile);
+  const tail = RECEIPT_TAIL_PROFILES[key];
+  const lines = clampFeedLines(feedLines, key === 'xp365b' ? 5 : 3);
+
+  chunks.push(Buffer.from([ESC, 0x64, lines]));
+  chunks.push(Buffer.from([GS, 0x56, tail.cutMode, tail.feedUnits]));
+}
+
+function printerOptionsFromShop(shop = {}) {
+  return {
+    profile: normalizeReceiptProfile(shop.receiptPrinterProfile),
+    feedLines: clampFeedLines(shop.receiptFeedLines, 5),
+  };
+}
+
+function buildEscPosReceipt({ shop, sale, paperWidth = 80, printerOptions = {} }) {
   const chars = paperWidth >= 72 ? 42 : 32;
   const rule = '-'.repeat(chars);
   const chunks = [];
@@ -114,8 +148,7 @@ function buildEscPosReceipt({ shop, sale, paperWidth = 80 }) {
     chunks.push(encodeText(`Returns accepted within ${Math.floor(Number(shop.returnWithinDays))} days\n`));
   }
 
-  // GS V 65 n — feed n units then partial cut (reliable on XP-80U vs cut-in-place)
-  chunks.push(Buffer.from([GS, 0x56, 65, 0x40]));
+  appendReceiptTail(chunks, printerOptions);
   return Buffer.concat(chunks);
 }
 
@@ -132,12 +165,11 @@ function formatRefundMethod(method) {
   return 'Cash';
 }
 
-function buildEscPosReturnReceipt({ shop, returnRecord, paperWidth = 80 }) {
+function buildEscPosReturnReceipt({ shop, returnRecord, paperWidth = 80, printerOptions = {} }) {
   const chars = paperWidth >= 72 ? 42 : 32;
   const rule = '-'.repeat(chars);
   const chunks = [];
   const ESC = 0x1b;
-  const GS = 0x1d;
 
   chunks.push(Buffer.from([ESC, 0x40])); // init
   chunks.push(Buffer.from([ESC, 0x74, 0])); // code page PC437
