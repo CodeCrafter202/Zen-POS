@@ -93,3 +93,27 @@ out/
 
 # Agent / debug dumps
 debug-*
+
+ # Local databases and backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.zenbackup
+*.safety-copy
+.env.*
+!.env.example
+ # Local inspection scripts
+inspect-db.cjs
+
+ # Local databases and backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.zenbackup
+*.safety-copy
+.env.*
+!.env.example
+ # Local inspection scripts
+inspect-db.cjs
